@@ -29,10 +29,19 @@ All tests passing! The package is ready to use.
 
 ## 🚀 Quick Start
 
-### Install
+### Install from GitHub
+
 ```r
-install.packages("/home/abush/working_vol/indRect", 
-                 repos = NULL, type = "source")
+# Recommended: Install directly from GitHub
+# install.packages("devtools")
+devtools::install_github("abushbeaupre/indRect")
+```
+
+### Or Install Locally
+
+```r
+# If you've cloned the repository
+install.packages("/path/to/indRect", repos = NULL, type = "source")
 ```
 
 ### Use
@@ -182,22 +191,21 @@ ggsave("my_plot.png", p, width = 8, height = 6, dpi = 300)
 3. Include in your manuscript
 
 ### Share the Package
-```r
-# Build distributable file
-devtools::build("/home/abush/working_vol/indRect")
 
-# This creates: indRect_0.1.0.tar.gz
-# Others can install with:
-install.packages("indRect_0.1.0.tar.gz", repos = NULL, type = "source")
+The package is now on GitHub! Share it with others:
+
+**GitHub Repository:** https://github.com/abushbeaupre/indRect
+
+Others can install with:
+```r
+devtools::install_github("abushbeaupre/indRect")
 ```
 
-### Publish to GitHub (Optional)
-1. Create GitHub repository
-2. Push package code
-3. Others install with:
-```r
-devtools::install_github("yourusername/indRect")
-```
+To create a release version:
+1. Go to https://github.com/abushbeaupre/indRect/releases
+2. Click "Create a new release"
+3. Tag version: v0.1.0
+4. Publish release
 
 ---
 

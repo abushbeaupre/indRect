@@ -1,7 +1,7 @@
-# indRect <img src="man/figures/logo.png" align="right" height="139" />
+# indRect
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/yourusername/indRect/workflows/R-CMD-check/badge.svg)](https://github.com/yourusername/indRect/actions)
+[![R-CMD-check](https://github.com/abushbeaupre/indRect/workflows/R-CMD-check/badge.svg)](https://github.com/abushbeaupre/indRect/actions)
 <!-- badges: end -->
 
 ## Visualizing Indirect Effects in Causal Models
@@ -10,14 +10,15 @@
 
 ## Installation
 
-You can install the development version of indRect from your local directory:
+You can install indRect directly from GitHub:
 
 ```r
-# Install from source
-install.packages("/home/abush/working_vol/indRect", repos = NULL, type = "source")
+# Install from GitHub (recommended)
+# install.packages("devtools")
+devtools::install_github("abushbeaupre/indRect")
 
-# Or using devtools
-devtools::install_local("/home/abush/working_vol/indRect")
+# Or install from source if you've cloned the repository
+install.packages("/path/to/indRect", repos = NULL, type = "source")
 ```
 
 ## Quick Start
@@ -207,4 +208,20 @@ Email: allen.bush-beaupre@usherbrooke.ca
 
 ## Contributing
 
-Contributions, bug reports, and feature requests are welcome! Please file an issue or submit a pull request.
+Contributions, bug reports, and feature requests are welcome! Please:
+
+1. Visit the [GitHub repository](https://github.com/abushbeaupre/indRect)
+2. File an issue or submit a pull request
+3. Check existing issues before creating new ones
+
+### Development Installation
+
+To contribute to the package:
+
+```r
+# Clone the repository
+git clone https://github.com/abushbeaupre/indRect.git
+
+# Install in development mode
+devtools::install("indRect", dependencies = TRUE)
+```

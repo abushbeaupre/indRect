@@ -2,19 +2,31 @@
 
 ## Quick Installation
 
-To install the package from your local directory:
+### Option 1: Install from GitHub (Recommended)
 
 ```r
-# Option 1: Install from source (recommended)
-install.packages("/home/abush/working_vol/indRect", 
+# Install devtools if you don't have it
+# install.packages("devtools")
+
+# Install indRect from GitHub
+devtools::install_github("abushbeaupre/indRect")
+```
+
+### Option 2: Install from Local Source
+
+If you've cloned the repository:
+
+```r
+# Install from source
+install.packages("/path/to/indRect", 
                  repos = NULL, 
                  type = "source")
 
-# Option 2: Using devtools
-devtools::install_local("/home/abush/working_vol/indRect")
+# Or using devtools
+devtools::install_local("/path/to/indRect")
 
-# Option 3: Using remotes
-remotes::install_local("/home/abush/working_vol/indRect")
+# Or using remotes
+remotes::install_local("/path/to/indRect")
 ```
 
 ## Verify Installation
