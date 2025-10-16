@@ -1,0 +1,234 @@
+---
+title: "Visualizing Indirect Effects with indRect"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Visualizing Indirect Effects with indRect}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+## Introduction
+
+The `indRect` package provides tools for visualizing direct and indirect effects in causal models. This vignette demonstrates three use cases:
+
+1. **Simple indirect effects**: E → M → O
+2. **Interacting predictors**: E1*E2 → M → O  
+3. **Interaction as mediator**: E → M1*M2 → O
+
+The methods are based on Bush-Beaupré et al. (2025) "Extending the causal inference toolkit for ecologists: A visualization method of indirect effects".
+
+## Setup
+
+```{r setup}
+library(indRect)
+library(glmmTMB)
+library(patchwork)  # For combining plots
+set.seed(333)
+```
+
+## Case 1: Simple Indirect Effects
+
+### Simulate Data
+
+We simulate a simple mediation scenario where:
+- E (exposure) affects M (mediator)
+- Both E and M affect O (outcome)
+
+```{r case1-data}
+n <- 3000
+E <- rnorm(n, 0, 1)
+M <- rpois(n, exp(4 + 0.1*E))
+O <- rbinom(n, size = 1, prob = plogis(-3 + 0.1*E + 0.05*M))
+
+data <- data.frame(E = E, M = M, O = O)
+head(data)
+```
+
+### Fit Models
+
+```{r case1-models}
+# Model for M ~ E
+mod_M_E <- glmmTMB(M ~ E, family = poisson, data = data)
+
+# Model for O ~ E + M
+mod_O_EM <- glmmTMB(O ~ E + M, family = binomial, data = data)
+```
+
+### Extract Predictions
+
+```{r case1-predictions}
+preds <- indirect_predictions(
+  model_mediator = mod_M_E,
+  model_outcome = mod_O_EM,
+  exposure_var = "E",
+  mediator_var = "M",
+  data = data,
+  n_points = 3000  # Use many points for smooth visualization
+)
+
+names(preds)
+```
+
+### Visualize Effects
+
+```{r case1-plots, fig.width=9, fig.height=9}
+# Direct effect: E → M
+p1 <- plot_direct_effect(
+  preds$pred_M_E, "E",
+  title = "Direct effect of E on M",
+  x_label = "Exposure", y_label = "Mediator",
+  x_color = "tomato3", y_color = "aquamarine4"
+)
+
+# Direct effect: E → O
+p2 <- plot_direct_effect(
+  preds$pred_O_E, "E",
+  title = "Direct effect of E on O",
+  x_label = "Exposure", y_label = "Outcome",
+  x_color = "tomato3", y_color = "lightskyblue"
+)
+
+# Direct effect: M → O
+p3 <- plot_direct_effect(
+  preds$pred_O_M, "M",
+  title = "Direct effect of M on O",
+  x_label = "Mediator", y_label = "Outcome",
+  x_color = "mediumaquamarine", y_color = "lightskyblue"
+)
+
+# Indirect effect: E → M → O
+p4 <- plot_indirect_effect(
+  preds$pred_O_M, preds$pred_O_ME,
+  mediator_var = "M", exposure_var = "E",
+  title = "Indirect effect of E on O through M",
+  x_label = "Mediator", y_label = "Outcome"
+)
+
+# Combine plots
+(p2 | plot_spacer()) / (p1 | plot_spacer()) / (p3 | p4) +
+  plot_annotation(tag_levels = 'A')
+```
+
+## Case 2: Interacting Predictors
+
+### Simulate Data
+
+Two exposures (E1, E2) interact in their effects on both M and O.
+
+```{r case2-data}
+n <- 3000
+E1 <- rnorm(n, 0, 1)
+E2 <- rpois(n, 3)
+M <- rpois(n, exp(0 + 0.3*E1 + 0.2*E2 + 0.05*E1*E2))
+O <- rbinom(n, 1, plogis(-1 + 0.1*E1 + 0.2*E2 - 0.5*E1*E2 - 0.25*M))
+
+data2 <- data.frame(E1 = E1, E2 = E2, M = M, O = O)
+```
+
+### Fit Models
+
+```{r case2-models}
+mod_M_E1E2 <- glmmTMB(M ~ E1 + E2 + E1:E2, family = poisson, data = data2)
+mod_O_E1E2M <- glmmTMB(O ~ E1 + E2 + E1:E2 + M, family = binomial, data = data2)
+```
+
+### Extract and Visualize
+
+```{r case2-predictions}
+preds2 <- indirect_predictions_interaction(
+  model_mediator = mod_M_E1E2,
+  model_outcome = mod_O_E1E2M,
+  exposure1_var = "E1",
+  exposure2_var = "E2",
+  mediator_var = "M",
+  data = data2,
+  exposure1_values = c(-1, 0, 1),
+  n_points = 30
+)
+```
+
+```{r case2-plots, fig.width=9, fig.height=4}
+# Indirect effect with faceting by E1
+plot_indirect_interaction(
+  preds2$pred_O_ME1E2,
+  mediator_var = "M",
+  exposure1_var = "E1",
+  exposure2_var = "E2",
+  facet_labels = c(`-1` = "E1 = -1", `0` = "E1 = 0", `1` = "E1 = 1")
+)
+```
+
+## Case 3: Interaction as Mediator
+
+### Simulate Data
+
+Exposure affects two mediators that interact in their effect on outcome.
+
+```{r case3-data}
+n <- 3000
+E <- rnorm(n, 0, 1)
+M1 <- rpois(n, exp(4 + 0.1*E))
+M2 <- rpois(n, exp(1 - 0.2*E))
+O <- rbinom(n, 1, plogis(-3 + 0.1*E + 0.05*M1 + 0.03*M2 + 0.01*M1*M2))
+
+data3 <- data.frame(E = E, M1 = M1, M2 = M2, O = O)
+```
+
+### Fit Models
+
+```{r case3-models}
+mod_M1_E <- glmmTMB(M1 ~ E, family = poisson, data = data3)
+mod_M2_E <- glmmTMB(M2 ~ E, family = poisson, data = data3)
+mod_O_EM1M2 <- glmmTMB(O ~ E + M1 + M2 + M1:M2, family = binomial, data = data3)
+```
+
+### Extract and Visualize
+
+```{r case3-predictions}
+preds3 <- indirect_predictions_mediator_interaction(
+  model_mediator1 = mod_M1_E,
+  model_mediator2 = mod_M2_E,
+  model_outcome = mod_O_EM1M2,
+  exposure_var = "E",
+  mediator1_var = "M1",
+  mediator2_var = "M2",
+  data = data3,
+  mediator2_quantiles = c(0.1, 0.5, 0.9),
+  n_points = 30
+)
+```
+
+```{r case3-plots, fig.width=9, fig.height=4}
+# Indirect effect with faceting by M2 quantiles
+plot_indirect_mediator_interaction(
+  preds3$pred_O_M1M2,
+  preds3$pred_O_M1M2E,
+  mediator1_var = "M1",
+  mediator2_var = "M2",
+  exposure_var = "E",
+  facet_labels = c(`1` = "M2 = 1", `3` = "M2 = 3", `5` = "M2 = 5")
+)
+```
+
+## Interpretation
+
+The visualization method makes indirect effects more interpretable than standardized coefficients alone:
+
+1. **Direct effects** show the relationship between variables while controlling for others
+2. **Indirect effects** show how the exposure influences the outcome through the mediator
+3. The **colored gradient** indicates how different exposure levels map to different portions of the mediator-outcome relationship
+
+This is especially useful for non-linear relationships (e.g., GLMs with link functions) where standardized coefficients don't capture the full picture.
+
+## References
+
+Bush-Beaupré, A., Bélisle, M., & Coroller-Chouraki, S. (2025). Extending the causal inference toolkit for ecologists: A visualization method of indirect effects. _Methods in Ecology and Evolution_.
