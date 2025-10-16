@@ -19,6 +19,7 @@
 #' @export
 #' @importFrom ggplot2 ggplot aes geom_line geom_ribbon theme_classic labs theme element_line element_text element_blank
 #' @importFrom grid arrow unit
+#' @importFrom rlang .data
 #'
 #' @examples
 #' \dontrun{
@@ -85,6 +86,7 @@ plot_direct_effect <- function(pred_data, x_var, y_var = "estimate",
 #' @export
 #' @importFrom ggplot2 ggplot aes geom_line geom_ribbon scale_color_gradientn guides theme labs theme_classic
 #' @importFrom scales alpha
+#' @importFrom rlang .data
 #'
 #' @examples
 #' \dontrun{

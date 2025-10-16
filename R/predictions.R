@@ -52,30 +52,38 @@ indirect_predictions <- function(model_mediator, model_outcome, exposure_var, me
   E_grid <- seq(from = E_range[1], to = E_range[2], length.out = n_points)
   
   # Direct effect: M ~ E
-  newdata_M_E <- data.frame(x = E_grid)
-  names(newdata_M_E) <- exposure_var
+  # Use datagrid to properly handle all variables
+  args_M_E <- list(model = model_mediator)
+  args_M_E[[exposure_var]] <- E_grid
+  newdata_M_E <- do.call(datagrid, args_M_E)
   pred_M_E <- predictions(model_mediator, vcov = vcov, newdata = newdata_M_E, re.form = NA)
   
-  # Direct effect: O ~ E (holding M at mean)
-  newdata_O_E <- data.frame(x = E_grid)
-  names(newdata_O_E) <- exposure_var
+  # Direct effect: O ~ E (M at typical value)
+  args_O_E <- list(model = model_outcome)
+  args_O_E[[exposure_var]] <- E_grid
+  newdata_O_E <- do.call(datagrid, args_O_E)
   pred_O_E <- predictions(model_outcome, vcov = vcov, newdata = newdata_O_E, re.form = NA)
   
-  # Direct effect: O ~ M (holding E at mean)
-  M_grid <- seq(from = M_range[1], to = M_range[2], length.out = n_points)
-  newdata_O_M <- data.frame(x = M_grid)
-  names(newdata_O_M) <- mediator_var
+  # Direct effect: O ~ M (E at typical value)
+  # Use the RANGE of predicted M values for better visualization
+  M_pred_range <- range(pred_M_E$estimate, na.rm = TRUE)
+  M_grid <- seq(from = M_pred_range[1], to = M_pred_range[2], length.out = n_points)
+  args_O_M <- list(model = model_outcome)
+  args_O_M[[mediator_var]] <- M_grid
+  newdata_O_M <- do.call(datagrid, args_O_M)
   pred_O_M <- predictions(model_outcome, vcov = vcov, newdata = newdata_O_M, re.form = NA)
   
   # Indirect effect: O ~ M(E)
   # Use predicted values of M from model_mediator as input to model_outcome
-  newdata_O_ME <- data.frame(x = pred_M_E$estimate)
-  names(newdata_O_ME) <- mediator_var
+  args_O_ME <- list(model = model_outcome)
+  args_O_ME[[mediator_var]] <- pred_M_E$estimate
+  newdata_O_ME <- do.call(datagrid, args_O_ME)
   pred_O_ME_raw <- predictions(model_outcome, vcov = vcov, newdata = newdata_O_ME, re.form = NA)
   
-  # Add exposure values to indirect predictions
+  # Add exposure values and mediator values to indirect predictions
   pred_O_ME <- pred_O_ME_raw
   pred_O_ME[[exposure_var]] <- pred_M_E[[exposure_var]]
+  pred_O_ME[[mediator_var]] <- pred_M_E$estimate
   
   # Return list of all predictions
   list(

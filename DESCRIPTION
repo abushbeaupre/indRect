@@ -19,7 +19,9 @@ Imports:
     dplyr,
     tibble,
     scales,
-    patchwork
+    patchwork,
+    grid,
+    rlang
 Suggests:
     glmmTMB,
     testthat (>= 3.0.0),
